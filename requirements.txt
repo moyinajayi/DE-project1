@@ -1,0 +1,7 @@
+requests
+google-cloud-storage
+google-cloud-bigquery
+pandas
+pyarrow
+dbt-bigquery
+prefect
