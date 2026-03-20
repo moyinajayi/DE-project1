@@ -16,7 +16,7 @@ OUTPUT_DIR = Path("data/raw/crypto")
 TOP_N_COINS = 100  # Number of top coins to fetch
 
 # Rate limiting: CoinGecko free tier = 10-30 calls/minute
-RATE_LIMIT_DELAY = 5  # seconds between requests
+RATE_LIMIT_DELAY = 12  # seconds between requests
 
 
 def get_top_coins(n: int = 100) -> list:
@@ -47,8 +47,8 @@ def get_top_coins(n: int = 100) -> list:
     return coins[:n]
 
 
-def get_historical_prices(coin_id: str, days: int = 365) -> dict:
-    """Fetch historical price data for a coin"""
+def get_historical_prices(coin_id: str, days: int = 365, max_retries: int = 5) -> dict:
+    """Fetch historical price data for a coin with retry on rate limit"""
     url = f"{COINGECKO_BASE_URL}/coins/{coin_id}/market_chart"
     params = {
         "vs_currency": "usd",
@@ -56,7 +56,16 @@ def get_historical_prices(coin_id: str, days: int = 365) -> dict:
         "interval": "daily"
     }
     
-    response = requests.get(url, params=params)
+    for attempt in range(max_retries):
+        response = requests.get(url, params=params)
+        if response.status_code == 429:
+            wait = 60 * (attempt + 1)
+            print(f"    Rate limited. Waiting {wait}s before retry ({attempt+1}/{max_retries})...")
+            time.sleep(wait)
+            continue
+        response.raise_for_status()
+        return response.json()
+    
     response.raise_for_status()
     return response.json()
 
@@ -153,11 +162,15 @@ def main():
     top_10_ids = [c["id"] for c in coins[:10]]
     
     for coin_id in top_10_ids:
+        existing_file = OUTPUT_DIR / f"historical_{coin_id}.csv"
+        if existing_file.exists():
+            print(f"  Skipping {coin_id} (already exists)")
+            continue
         print(f"  Fetching {coin_id}...")
         try:
+            time.sleep(RATE_LIMIT_DELAY)
             historical = get_historical_prices(coin_id, days=365)
             save_historical_data(coin_id, historical)
-            time.sleep(RATE_LIMIT_DELAY)
         except Exception as e:
             print(f"  Error fetching {coin_id}: {e}")
     

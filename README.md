@@ -15,7 +15,7 @@ This project builds an **end-to-end data pipeline** for cryptocurrency market an
 
 ### 1. Dataset Selection
 - [x] Choose a dataset — **CoinGecko Cryptocurrency API**
-- [x] Dataset is large enough (100+ coins, 365 days of daily history)
+- [x] Dataset is large enough (100+ coins, 365 days of daily history for top 10)
 - [x] Data has interesting dimensions (price, market cap, volume, % changes)
 
 ### 2. Infrastructure Setup
@@ -26,6 +26,7 @@ This project builds an **end-to-end data pipeline** for cryptocurrency market an
 
 ### 3. Data Ingestion Pipeline (Batch)
 - [x] Python script to fetch data from CoinGecko API (`crypto_batch.py`)
+- [x] Fetch missing coins historical data (`fetch_missing.py`)
 - [x] Upload raw CSVs to GCS data lake (`upload_to_gcs.py`)
 - [x] Load from GCS to BigQuery raw tables (`crypto_load_to_bq.py`)
 - [x] (Optional) Live streaming prices (`crypto_stream.py`)
@@ -92,6 +93,7 @@ de-final-project/
 │   └── terraform.tfvars.example    # Template for Terraform variables
 ├── ingestion/                      # Data ingestion scripts
 │   ├── crypto_batch.py             # Fetch top 100 coins + 1yr history
+│   ├── fetch_missing.py            # Fetch historical data for missing coins
 │   ├── upload_to_gcs.py            # Upload raw CSVs to GCS
 │   ├── crypto_load_to_bq.py        # Load from GCS into BigQuery
 │   └── crypto_stream.py            # (Optional) Live price streaming
@@ -152,7 +154,7 @@ cd ..
 export GCP_PROJECT="your-gcp-project-id"
 export GCS_BUCKET="your-bucket-name"
 
-# Fetch historical crypto data from CoinGecko (top 100 coins + 1yr history for top 5)
+# Fetch historical crypto data from CoinGecko (top 100 coins + 1yr history for top 10)
 python3 ingestion/crypto_batch.py
 
 # Upload raw CSVs to GCS
@@ -208,11 +210,12 @@ Formatted table with prices, market caps, volumes, and color-coded % changes.
 - **Source:** [CoinGecko API](https://www.coingecko.com/en/api) (free tier)
 - **Data lake:** `gs://<bucket-name>/raw/crypto/`
 - **BigQuery dataset:** `<project>.final_project`
+- **Coins with historical data:** Bitcoin, Ethereum, BNB (Binancecoin), XRP (Ripple), Tether, Solana, Dogecoin, Cardano, Tron, USD Coin
 
 | Table | Description | Partitioning |
 |-------|-------------|--------------|
 | `crypto_market_data` | Current market snapshot (100 coins) | — |
-| `crypto_historical_prices` | Daily prices for top 5 coins (365 days) | Partitioned by `timestamp` (DAY) |
+| `crypto_historical_prices` | Daily prices for top 10 coins (365 days each) | Partitioned by `timestamp` (DAY) |
 | `crypto_prices_stream` | Live streaming prices (optional) | — |
 
 ---
