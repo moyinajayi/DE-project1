@@ -5,3 +5,5 @@ pandas
 pyarrow
 dbt-bigquery
 prefect
+streamlit
+plotly

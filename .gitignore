@@ -42,3 +42,6 @@ dbt/logs/
 
 # Logs
 *.log
+
+# Streamlit secrets (NEVER commit!)
+.streamlit/secrets.toml

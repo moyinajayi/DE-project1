@@ -175,8 +175,17 @@ de-final-project/
 
 5. **Run ingestion pipeline:**
    ```bash
-   python ingestion/download_data.py
+   # Batch: Download historical crypto data
+   python ingestion/crypto_batch.py
+   
+   # Upload to GCS
    python ingestion/upload_to_gcs.py
+   
+   # Load to BigQuery
+   python ingestion/crypto_load_to_bq.py
+   
+   # Stream: Run live price streaming (optional)
+   python ingestion/crypto_stream.py
    ```
 
 6. **Run dbt transformations:**
@@ -189,19 +198,28 @@ de-final-project/
 
 ## 📊 Dashboard
 
-### Tile 1: [Description]
-_Screenshot here_
+### Tile 1: Market Cap Distribution
+Pie chart showing market cap distribution of top cryptocurrencies
 
-### Tile 2: [Description]
-_Screenshot here_
+### Tile 2: 24h Price Change
+Horizontal bar chart showing price changes (green for gains, red for losses)
+
+### Additional Features:
+- Historical price trends (line chart)
+- Live data table with formatting
+- KPI cards (Total Market Cap, BTC Dominance, 24h Volume, Avg Change)
 
 ---
 
 ## 📝 Notes
 
-- Dataset chosen: _________________
-- Data lake location: `gs://bucket-name/`
-- BigQuery dataset: `project.dataset`
+- Dataset chosen: **CoinGecko Cryptocurrency Data**
+- Data lake location: `gs://bucket-name/raw/crypto/`
+- BigQuery dataset: `project.final_project`
+- Tables:
+  - `crypto_market_data` - Current market snapshot
+  - `crypto_historical_prices` - Daily historical prices
+  - `crypto_prices_stream` - Live streaming prices
 
 ---
 
