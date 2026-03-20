@@ -16,7 +16,7 @@ OUTPUT_DIR = Path("data/raw/crypto")
 TOP_N_COINS = 100  # Number of top coins to fetch
 
 # Rate limiting: CoinGecko free tier = 10-30 calls/minute
-RATE_LIMIT_DELAY = 2  # seconds between requests
+RATE_LIMIT_DELAY = 5  # seconds between requests
 
 
 def get_top_coins(n: int = 100) -> list:

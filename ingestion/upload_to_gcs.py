@@ -22,10 +22,11 @@ def upload_to_gcs(bucket_name: str, source_path: Path, destination_blob: str) ->
 
 
 def main():
-    # Upload all files in source directory
-    for file_path in SOURCE_DIR.glob("*"):
+    # Upload all files recursively and keep raw/<subdir>/<file> paths.
+    for file_path in SOURCE_DIR.rglob("*"):
         if file_path.is_file():
-            destination = f"{DESTINATION_PREFIX}{file_path.name}"
+            relative_path = file_path.relative_to(SOURCE_DIR)
+            destination = f"{DESTINATION_PREFIX}{relative_path.as_posix()}"
             upload_to_gcs(BUCKET_NAME, file_path, destination)
     
     print("Upload complete!")

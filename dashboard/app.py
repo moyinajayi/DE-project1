@@ -17,11 +17,16 @@ st.set_page_config(
     layout="wide"
 )
 
+try:
+    HAS_STREAMLIT_SECRETS = "gcp_service_account" in st.secrets and "project" in st.secrets
+except Exception:
+    HAS_STREAMLIT_SECRETS = False
+
 
 def get_bigquery_client():
     """Create BigQuery client with proper authentication"""
     # Check if running on Streamlit Cloud (secrets available)
-    if "gcp_service_account" in st.secrets:
+    if HAS_STREAMLIT_SECRETS:
         credentials = service_account.Credentials.from_service_account_info(
             st.secrets["gcp_service_account"]
         )
@@ -34,7 +39,7 @@ def get_bigquery_client():
 
 
 # Configuration
-if "gcp_service_account" in st.secrets:
+if HAS_STREAMLIT_SECRETS:
     PROJECT_ID = st.secrets["project"]["gcp_project_id"]
     DATASET_ID = st.secrets["project"]["dataset_id"]
 else:
