@@ -11,6 +11,8 @@ ENV/
 # Environment variables
 .env
 *.env
+###/Users/moyinbaby/Downloads/Dev & Config/gcpserviceacccountcreds.json
+
 
 # Terraform
 *.tfstate

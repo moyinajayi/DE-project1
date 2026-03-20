@@ -17,11 +17,16 @@ st.set_page_config(
     layout="wide"
 )
 
+try:
+    HAS_STREAMLIT_SECRETS = "gcp_service_account" in st.secrets and "project" in st.secrets
+except Exception:
+    HAS_STREAMLIT_SECRETS = False
+
 
 def get_bigquery_client():
     """Create BigQuery client with proper authentication"""
     # Check if running on Streamlit Cloud (secrets available)
-    if "gcp_service_account" in st.secrets:
+    if HAS_STREAMLIT_SECRETS:
         credentials = service_account.Credentials.from_service_account_info(
             st.secrets["gcp_service_account"]
         )
@@ -34,7 +39,7 @@ def get_bigquery_client():
 
 
 # Configuration
-if "gcp_service_account" in st.secrets:
+if HAS_STREAMLIT_SECRETS:
     PROJECT_ID = st.secrets["project"]["gcp_project_id"]
     DATASET_ID = st.secrets["project"]["dataset_id"]
 else:
@@ -114,6 +119,8 @@ def main():
         # Use sample data for demo
         df_market = pd.DataFrame({
             "rank": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            "coin_id": ["bitcoin", "ethereum", "tether", "binancecoin", "solana",
+                        "ripple", "usd-coin", "cardano", "avalanche-2", "dogecoin"],
             "name": ["Bitcoin", "Ethereum", "Tether", "BNB", "Solana", 
                      "XRP", "USDC", "Cardano", "Avalanche", "Dogecoin"],
             "symbol": ["btc", "eth", "usdt", "bnb", "sol", 
@@ -135,7 +142,7 @@ def main():
         dates = pd.date_range(end=pd.Timestamp.now(), periods=365, freq='D')
         df_historical = pd.DataFrame()
         
-        for coin, base_price in [("bitcoin", 45000), ("ethereum", 2500), ("solana", 100)]:
+        for coin, base_price in [("bitcoin", 45000), ("ethereum", 2500), ("tether", 1.0), ("binancecoin", 550), ("solana", 145), ("ripple", 2.4), ("usd-coin", 1.0), ("cardano", 0.45), ("avalanche-2", 35), ("dogecoin", 0.12)]:
             prices = base_price * (1 + np.cumsum(np.random.randn(365) * 0.02))
             temp_df = pd.DataFrame({
                 "timestamp": dates,
@@ -148,7 +155,7 @@ def main():
         # Load real data from BigQuery
         try:
             df_market = get_market_data()
-            df_historical = get_historical_prices(["bitcoin", "ethereum", "solana"])
+            df_historical = get_historical_prices(["bitcoin", "ethereum", "binancecoin", "ripple", "tether"])
         except Exception as e:
             st.error(f"Error loading data: {e}")
             st.info("Enable Demo Mode to see sample data")
@@ -160,10 +167,11 @@ def main():
     top_n = st.sidebar.slider("Show top N coins", 5, 50, 10)
     df_display = df_market.head(top_n)
     
+    available_coins = df_market["name"].tolist()[:20]
     selected_coins = st.sidebar.multiselect(
         "Select coins for chart",
-        options=df_market["name"].tolist()[:20],
-        default=["Bitcoin", "Ethereum"]
+        options=available_coins,
+        default=available_coins[:10]
     )
     
     # KPI Row
@@ -241,8 +249,13 @@ def main():
     st.subheader("📉 Historical Price Trends")
     
     if not df_historical.empty and selected_coins:
-        selected_ids = [name.lower() for name in selected_coins]
-        df_hist_filtered = df_historical[df_historical["coin_id"].str.lower().isin(selected_ids)]
+        # Map display names to coin_ids used in historical data
+        if "coin_id" in df_market.columns:
+            name_to_id = dict(zip(df_market["name"], df_market["coin_id"] if "coin_id" in df_market.columns else df_market["name"].str.lower()))
+        else:
+            name_to_id = {name: name.lower() for name in df_market["name"]}
+        selected_ids = [name_to_id.get(name, name.lower()) for name in selected_coins]
+        df_hist_filtered = df_historical[df_historical["coin_id"].isin(selected_ids)]
         
         if not df_hist_filtered.empty:
             fig_line = px.line(

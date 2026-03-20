@@ -1,80 +1,49 @@
-# Data Engineering Final Project
+# Crypto Analytics — Data Engineering Final Project
 
-## 🎯 Objective
-Build an end-to-end data pipeline with a dashboard containing at least 2 tiles.
+## 🎯 Problem Description
+
+This project builds an **end-to-end data pipeline** for cryptocurrency market analytics. It ingests real-time and historical price data from the [CoinGecko API](https://www.coingecko.com/en/api), stores it in a cloud data lake and warehouse, transforms it with dbt, and surfaces insights through an interactive Streamlit dashboard.
+
+**Key questions answered:**
+- What is the current market cap distribution across top cryptocurrencies?
+- Which coins had the biggest 24-hour price swings?
+- How have prices trended over the past year for major coins?
 
 ---
 
 ## 📋 Project Checklist
 
 ### 1. Dataset Selection
-- [ ] Choose a dataset (see suggestions below)
-- [ ] Ensure dataset is large enough (100K+ rows recommended)
-- [ ] Verify data has interesting dimensions for visualization
-
-**Dataset Ideas:**
-| Dataset | Source | Good For |
-|---------|--------|----------|
-| Spotify Charts | [Kaggle](https://www.kaggle.com/datasets) | Music trends, artist analytics |
-| Stack Overflow Survey | [SO Annual Survey](https://insights.stackoverflow.com/survey) | Developer trends |
-| GitHub Archive | [GH Archive](https://www.gharchive.org/) | Open source activity |
-| Weather Data | [NOAA](https://www.ncdc.noaa.gov/cdo-web/) | Climate analysis |
-| Flight Data | [OpenSky](https://opensky-network.org/) | Aviation analytics |
-| Crypto Prices | [CoinGecko API](https://www.coingecko.com/en/api) | Financial trends |
-| Reddit Posts | [Pushshift](https://pushshift.io/) | Social media analysis |
-| E-commerce | [Brazilian E-commerce](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) | Sales analytics |
-
----
+- [x] Choose a dataset — **CoinGecko Cryptocurrency API**
+- [x] Dataset is large enough (100+ coins, 365 days of daily history for top 10)
+- [x] Data has interesting dimensions (price, market cap, volume, % changes)
 
 ### 2. Infrastructure Setup
-- [ ] Create GCP project (or AWS/Azure)
-- [ ] Set up service account with appropriate permissions
-- [ ] Create Cloud Storage bucket (data lake)
-- [ ] Create BigQuery dataset (data warehouse)
+- [x] Create GCP project
+- [x] Set up service account with appropriate permissions
+- [x] Create Cloud Storage bucket (data lake) via Terraform
+- [x] Create BigQuery dataset (data warehouse) via Terraform
 
----
-
-### 3. Data Ingestion Pipeline
-Choose **Batch** or **Stream**:
-
-#### Option A: Batch Pipeline
-- [ ] Write Python script to download/fetch data
-- [ ] Upload raw data to GCS (data lake)
-- [ ] Load from GCS to BigQuery (raw tables)
-
-#### Option B: Stream Pipeline  
-- [ ] Set up Kafka/Redpanda
-- [ ] Create producer to ingest data
-- [ ] Create consumer/Flink job to process
-- [ ] Write to data warehouse
-
----
+### 3. Data Ingestion Pipeline (Batch)
+- [x] Python script to fetch data from CoinGecko API (`crypto_batch.py`)
+- [x] Fetch missing coins historical data (`fetch_missing.py`)
+- [x] Upload raw CSVs to GCS data lake (`upload_to_gcs.py`)
+- [x] Load from GCS to BigQuery raw tables (`crypto_load_to_bq.py`)
+- [x] (Optional) Live streaming prices (`crypto_stream.py`)
 
 ### 4. Data Transformation (dbt)
-- [ ] Create dbt project
-- [ ] Build staging models (clean raw data)
-- [ ] Build intermediate models (business logic)
-- [ ] Build mart models (dashboard-ready)
+- [x] Create dbt project (`dbt/crypto_dbt`)
+- [x] dbt models configured and running (PASS=2)
 
----
+### 5. Workflow Orchestration
+- [ ] Not yet implemented (Prefect listed as dependency)
 
-### 5. Workflow Orchestration (Optional but recommended)
-- [ ] Set up Prefect/Airflow
-- [ ] Create DAG for pipeline
-- [ ] Schedule daily/hourly runs
-
----
-
-### 6. Dashboard (Required - 2 tiles minimum)
-- [ ] Connect to BigQuery mart tables
-- [ ] Create Tile 1: _________________
-- [ ] Create Tile 2: _________________
-
-**Dashboard Tools:**
-- Google Looker Studio (free, native BigQuery integration)
-- Metabase (open source)
-- Streamlit (Python-based)
-- Apache Superset
+### 6. Dashboard (Streamlit — 4 tiles + data table)
+- [x] Tile 1: Market Cap Distribution (donut chart)
+- [x] Tile 2: 24h Price Change (horizontal bar chart)
+- [x] Tile 3: Historical Price Trends (line chart)
+- [x] Tile 4: KPI Cards (Total Market Cap, BTC Dominance, 24h Volume, Avg Change)
+- [x] Interactive data table with formatted prices and color-coded changes
 
 ---
 
@@ -82,8 +51,8 @@ Choose **Batch** or **Stream**:
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Source     │────▶│  Data Lake   │────▶│  Warehouse   │
-│   (API/File) │     │    (GCS)     │     │  (BigQuery)  │
+│  CoinGecko   │────▶│  GCS Bucket  │────▶│  BigQuery    │
+│    API       │     │  (Data Lake) │     │  (Warehouse) │
 └──────────────┘     └──────────────┘     └──────────────┘
                                                  │
                                                  ▼
@@ -94,10 +63,18 @@ Choose **Batch** or **Stream**:
                                                  │
                                                  ▼
                                           ┌──────────────┐
+                                          │  Streamlit   │
                                           │  Dashboard   │
-                                          │  (2 tiles)   │
                                           └──────────────┘
 ```
+
+**Technologies used:**
+- **Cloud:** Google Cloud Platform (GCS, BigQuery)
+- **IaC:** Terraform
+- **Ingestion:** Python (requests, google-cloud-storage, google-cloud-bigquery)
+- **Transformation:** dbt (dbt-bigquery)
+- **Dashboard:** Streamlit + Plotly
+- **Language:** Python 3.9+
 
 ---
 
@@ -105,124 +82,160 @@ Choose **Batch** or **Stream**:
 
 ```
 de-final-project/
-├── README.md                 # This file
-├── infrastructure/           # Terraform files
-│   └── main.tf
-├── ingestion/               # Data ingestion scripts
-│   ├── download_data.py
-│   └── upload_to_gcs.py
-├── dbt/                     # dbt project
-│   ├── dbt_project.yml
-│   └── models/
-├── orchestration/           # Airflow/Prefect
-│   └── flows/
-├── dashboard/               # Dashboard screenshots
-│   └── screenshots/
-└── docker-compose.yml       # Local development
+├── README.md                       # This file
+├── requirements.txt                # Python dependencies
+├── .gitignore
+├── .streamlit/
+│   ├── config.toml                 # Streamlit theme & server config
+│   └── secrets.toml.example        # Template for GCP secrets
+├── infrastructure/                 # Terraform IaC
+│   ├── main.tf                     # GCS bucket + BigQuery dataset
+│   └── terraform.tfvars.example    # Template for Terraform variables
+├── ingestion/                      # Data ingestion scripts
+│   ├── crypto_batch.py             # Fetch top 100 coins + 1yr history
+│   ├── fetch_missing.py            # Fetch historical data for missing coins
+│   ├── upload_to_gcs.py            # Upload raw CSVs to GCS
+│   ├── crypto_load_to_bq.py        # Load from GCS into BigQuery
+│   └── crypto_stream.py            # (Optional) Live price streaming
+├── dbt/
+│   └── crypto_dbt/                 # dbt project
+│       ├── dbt_project.yml
+│       └── models/
+├── orchestration/                  # (Placeholder for Prefect/Airflow)
+└── dashboard/
+    ├── app.py                      # Streamlit dashboard application
+    ├── requirements.txt            # Dashboard-specific dependencies
+    └── screenshots/                # Dashboard screenshots
 ```
-
----
-
-## ✅ Evaluation Criteria
-
-| Criteria | Points | Notes |
-|----------|--------|-------|
-| Problem description | 2 | Clear README explaining the project |
-| Cloud infrastructure | 4 | IaC preferred (Terraform) |
-| Data ingestion | 4 | Batch or stream pipeline |
-| Data warehouse | 4 | Tables created, partitioned/clustered |
-| Transformations | 4 | dbt or Spark |
-| Dashboard | 4 | 2+ tiles with meaningful insights |
-| Reproducibility | 4 | Instructions to run the project |
-
-**Total: 26 points**
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.11+
-- Docker & Docker Compose
+- Python 3.9+
 - GCP account with billing enabled
-- Terraform (optional)
+- Terraform
+- gcloud CLI (for authentication)
 
-### Setup
+### 1. Clone and set up environment
 
-1. **Clone and enter project:**
-   ```bash
-   cd de-final-project
-   ```
+```bash
+cd de-final-project
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-2. **Create virtual environment:**
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   ```
+### 2. Authenticate with GCP
 
-3. **Set up GCP credentials:**
-   ```bash
-   export GOOGLE_APPLICATION_CREDENTIALS="path/to/service-account.json"
-   ```
+```bash
+# Option A: Service account key
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"
 
-4. **Run infrastructure (if using Terraform):**
-   ```bash
-   cd infrastructure
-   terraform init
-   terraform apply
-   ```
+# Option B: Application Default Credentials
+gcloud auth application-default login
+```
 
-5. **Run ingestion pipeline:**
-   ```bash
-   # Batch: Download historical crypto data
-   python ingestion/crypto_batch.py
-   
-   # Upload to GCS
-   python ingestion/upload_to_gcs.py
-   
-   # Load to BigQuery
-   python ingestion/crypto_load_to_bq.py
-   
-   # Stream: Run live price streaming (optional)
-   python ingestion/crypto_stream.py
-   ```
+### 3. Configure and deploy infrastructure
 
-6. **Run dbt transformations:**
-   ```bash
-   cd dbt
-   dbt run
-   ```
+```bash
+cd infrastructure
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your GCP project ID and bucket name
+terraform init
+terraform apply
+```
+
+### 4. Run the ingestion pipeline
+
+```bash
+cd ..
+export GCP_PROJECT="your-gcp-project-id"
+export GCS_BUCKET="your-bucket-name"
+
+# Fetch historical crypto data from CoinGecko (top 100 coins + 1yr history for top 10)
+python3 ingestion/crypto_batch.py
+
+# Upload raw CSVs to GCS
+python3 ingestion/upload_to_gcs.py
+
+# Load from GCS into BigQuery (creates partitioned tables)
+python3 ingestion/crypto_load_to_bq.py
+```
+
+### 5. Run dbt transformations
+
+```bash
+cd dbt/crypto_dbt
+dbt run
+```
+
+### 6. Launch the dashboard
+
+```bash
+cd ../../dashboard
+export GCP_PROJECT="your-gcp-project-id"
+streamlit run app.py
+```
+
+The dashboard opens at `http://localhost:8501`. Toggle **Demo Mode** off in the sidebar to load live BigQuery data.
 
 ---
 
 ## 📊 Dashboard
 
 ### Tile 1: Market Cap Distribution
-Pie chart showing market cap distribution of top cryptocurrencies
+Donut chart showing market cap distribution of top cryptocurrencies.
 
 ### Tile 2: 24h Price Change
-Horizontal bar chart showing price changes (green for gains, red for losses)
+Horizontal bar chart showing price changes — green for gains, red for losses.
 
-### Additional Features:
-- Historical price trends (line chart)
-- Live data table with formatting
-- KPI cards (Total Market Cap, BTC Dominance, 24h Volume, Avg Change)
+### Tile 3: Historical Price Trends
+Line chart showing price history over 365 days for selected coins.
+
+### Tile 4: KPI Cards
+- Total Market Cap
+- BTC Dominance %
+- 24h Trading Volume
+- Average 24h Price Change
+
+### Data Table
+Formatted table with prices, market caps, volumes, and color-coded % changes.
 
 ---
 
-## 📝 Notes
+## 📝 Dataset & Tables
 
-- Dataset chosen: **CoinGecko Cryptocurrency Data**
-- Data lake location: `gs://bucket-name/raw/crypto/`
-- BigQuery dataset: `project.final_project`
-- Tables:
-  - `crypto_market_data` - Current market snapshot
-  - `crypto_historical_prices` - Daily historical prices
-  - `crypto_prices_stream` - Live streaming prices
+- **Source:** [CoinGecko API](https://www.coingecko.com/en/api) (free tier)
+- **Data lake:** `gs://<bucket-name>/raw/crypto/`
+- **BigQuery dataset:** `<project>.final_project`
+- **Coins with historical data:** Bitcoin, Ethereum, BNB (Binancecoin), XRP (Ripple), Tether, Solana, Dogecoin, Cardano, Tron, USD Coin
+
+| Table | Description | Partitioning |
+|-------|-------------|--------------|
+| `crypto_market_data` | Current market snapshot (100 coins) | — |
+| `crypto_historical_prices` | Daily prices for top 10 coins (365 days each) | Partitioned by `timestamp` (DAY) |
+| `crypto_prices_stream` | Live streaming prices (optional) | — |
+
+---
+
+## ✅ Evaluation Criteria
+
+| Criteria | Points | Status |
+|----------|--------|--------|
+| Problem description | 2 | Clear README with problem statement |
+| Cloud infrastructure | 4 | Terraform (GCS + BigQuery) |
+| Data ingestion | 4 | Batch pipeline (API → GCS → BigQuery) |
+| Data warehouse | 4 | Partitioned tables in BigQuery |
+| Transformations | 4 | dbt project with models |
+| Dashboard | 4 | Streamlit with 4 tiles + data table |
+| Reproducibility | 4 | Step-by-step instructions above |
+
+**Total: 26 points**
 
 ---
 
 ## 👤 Author
-- Name: Moyin
-- Course: Data Engineering Zoomcamp 2026
+- **Name:** Moyin
+- **Course:** Data Engineering Zoomcamp 2026
