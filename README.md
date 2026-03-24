@@ -38,7 +38,9 @@ This project builds an **end-to-end data pipeline** for cryptocurrency market an
 - [x] dbt models configured and running (PASS=2)
 
 ### 5. Workflow Orchestration
-- [ ] Not yet implemented (Prefect listed as dependency)
+- [x] Airflow DAG (`orchestration/dags/crypto_pipeline_dag.py`)
+- [x] Pipeline: fetch → upload to GCS → load to BigQuery → dbt run
+- [x] Scheduled daily with retries
 
 ### 6. Dashboard (Streamlit — 4 tiles + data table)
 - [x] Tile 1: Market Cap Distribution (donut chart)
@@ -103,7 +105,9 @@ de-final-project/
 │   └── crypto_dbt/                 # dbt project
 │       ├── dbt_project.yml
 │       └── models/
-├── orchestration/                  # (Placeholder for Prefect/Airflow)
+├── orchestration/                  # Airflow orchestration
+│   └── dags/
+│       └── crypto_pipeline_dag.py  # Daily pipeline DAG
 └── dashboard/
     ├── app.py                      # Streamlit dashboard application
     ├── requirements.txt            # Dashboard-specific dependencies
