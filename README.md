@@ -42,6 +42,21 @@ This project builds an **end-to-end data pipeline** for cryptocurrency market an
 - [x] Pipeline: fetch → upload to GCS → load to BigQuery → dbt run
 - [x] Scheduled daily with retries
 
+#### Airflow setup/run
+
+This repo contains the Airflow DAG code, but **Airflow itself is not installed via `requirements.txt`**. You can run the orchestration in one of two ways:
+
+- **Managed Airflow (recommended for production)**  
+  - Provision an Airflow environment (e.g., GCP Cloud Composer or another managed service).  
+  - Copy `orchestration/dags/crypto_pipeline_dag.py` into your environment’s `dags/` directory.  
+  - Configure connections/variables for GCP, dbt, and any service accounts as required by the DAG.  
+  - Set the schedule interval in the DAG (daily with retries) or via the Airflow UI.
+
+- **Local Airflow (for development/testing)**  
+  - Install Airflow following the official docs (for example, using `pip install "apache-airflow[postgres]==<version>" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-<version>/constraints-3.10.txt"`).  
+  - Ensure `$AIRFLOW_HOME` is set and place `crypto_pipeline_dag.py` into `$AIRFLOW_HOME/dags/`.  
+  - Initialize the Airflow database (`airflow db init`), create a user if needed, then run `airflow webserver` and `airflow scheduler`.  
+  - Enable and monitor the `crypto_pipeline_dag` from the Airflow UI.
 ### 6. Dashboard (Streamlit — 4 tiles + data table)
 - [x] Tile 1: Market Cap Distribution (donut chart)
 - [x] Tile 2: 24h Price Change (horizontal bar chart)
