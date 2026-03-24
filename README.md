@@ -1,5 +1,7 @@
 # Crypto Analytics — Data Engineering Final Project
 
+**Live Dashboard:** [https://de-project1-crypto-dashboard.streamlit.app/](https://de-project1-crypto-dashboard.streamlit.app/)
+
 ## 🎯 Problem Description
 
 This project builds an **end-to-end data pipeline** for cryptocurrency market analytics. It ingests real-time and historical price data from the [CoinGecko API](https://www.coingecko.com/en/api), stores it in a cloud data lake and warehouse, transforms it with dbt, and surfaces insights through an interactive Streamlit dashboard.
