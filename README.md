@@ -1,5 +1,7 @@
 # Crypto Analytics — Data Engineering Final Project
 
+**Live Dashboard:** [https://de-project1-crypto-dashboard.streamlit.app/](https://de-project1-crypto-dashboard.streamlit.app/)
+
 ## 🎯 Problem Description
 
 This project builds an **end-to-end data pipeline** for cryptocurrency market analytics. It ingests real-time and historical price data from the [CoinGecko API](https://www.coingecko.com/en/api), stores it in a cloud data lake and warehouse, transforms it with dbt, and surfaces insights through an interactive Streamlit dashboard.
@@ -36,8 +38,25 @@ This project builds an **end-to-end data pipeline** for cryptocurrency market an
 - [x] dbt models configured and running (PASS=2)
 
 ### 5. Workflow Orchestration
-- [ ] Not yet implemented (Prefect listed as dependency)
+- [x] Airflow DAG (`orchestration/dags/crypto_pipeline_dag.py`)
+- [x] Pipeline: fetch → upload to GCS → load to BigQuery → dbt run
+- [x] Scheduled daily with retries
 
+#### Airflow setup/run
+
+This repo contains the Airflow DAG code, but **Airflow itself is not installed via `requirements.txt`**. You can run the orchestration in one of two ways:
+
+- **Managed Airflow (recommended for production)**  
+  - Provision an Airflow environment (e.g., GCP Cloud Composer or another managed service).  
+  - Copy `orchestration/dags/crypto_pipeline_dag.py` into your environment’s `dags/` directory.  
+  - Configure connections/variables for GCP, dbt, and any service accounts as required by the DAG.  
+  - Set the schedule interval in the DAG (daily with retries) or via the Airflow UI.
+
+- **Local Airflow (for development/testing)**  
+  - Install Airflow following the official docs (for example, using `pip install "apache-airflow[postgres]==<version>" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-<version>/constraints-3.10.txt"`).  
+  - Ensure `$AIRFLOW_HOME` is set and place `crypto_pipeline_dag.py` into `$AIRFLOW_HOME/dags/`.  
+  - Initialize the Airflow database (`airflow db init`), create a user if needed, then run `airflow webserver` and `airflow scheduler`.  
+  - Enable and monitor the `crypto_pipeline_dag` from the Airflow UI.
 ### 6. Dashboard (Streamlit — 4 tiles + data table)
 - [x] Tile 1: Market Cap Distribution (donut chart)
 - [x] Tile 2: 24h Price Change (horizontal bar chart)
@@ -101,7 +120,9 @@ de-final-project/
 │   └── crypto_dbt/                 # dbt project
 │       ├── dbt_project.yml
 │       └── models/
-├── orchestration/                  # (Placeholder for Prefect/Airflow)
+├── orchestration/                  # Airflow orchestration
+│   └── dags/
+│       └── crypto_pipeline_dag.py  # Daily pipeline DAG
 └── dashboard/
     ├── app.py                      # Streamlit dashboard application
     ├── requirements.txt            # Dashboard-specific dependencies
