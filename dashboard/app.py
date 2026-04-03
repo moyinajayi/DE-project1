@@ -291,7 +291,7 @@ def main():
             "24h Volume": "${:,.0f}",
             "24h Change %": "{:+.2f}%",
             "7d Change %": "{:+.2f}%"
-        }).applymap(
+        }).map(
             lambda x: 'color: #22c55e' if isinstance(x, str) and x.startswith('+') else 
                       ('color: #ef4444' if isinstance(x, str) and x.startswith('-') else ''),
             subset=["24h Change %", "7d Change %"]
